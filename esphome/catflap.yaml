@@ -1,1 +1,16 @@
+esphome:
+  name: catflap
+  friendly_name: Cat Flap
 
+esp32:
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+logger:
+
+api:
+
+ota:
