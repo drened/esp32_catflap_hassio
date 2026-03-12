@@ -5,6 +5,9 @@ esphome:
 substitutions:
   catflap_entry_id: ""
   test_chip_id: "900000000001"
+  rfid_uart_rx_pin: GPIO16
+  rfid_uart_tx_pin: GPIO17
+  rfid_uart_baud: "9600"
   front_threshold_mm: "180"
   back_threshold_mm: "180"
   sequence_timeout_ms: "2200"
@@ -18,6 +21,54 @@ wifi:
   password: !secret wifi_password
 
 logger:
+
+uart:
+  id: rfid_uart
+  rx_pin: ${rfid_uart_rx_pin}
+  tx_pin: ${rfid_uart_tx_pin}
+  baud_rate: ${rfid_uart_baud}
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  debug:
+    direction: RX
+    dummy_receiver: true
+    after:
+      delimiter: "\n"
+    sequence:
+      - lambda: |-
+          std::string raw(bytes.begin(), bytes.end());
+          std::string cleaned;
+          cleaned.reserve(raw.size());
+          for (char c : raw) {
+            if (c == '\r' || c == '\n' || c == ' ' || c == '\t' || c == '\0') {
+              continue;
+            }
+            cleaned.push_back(c);
+          }
+
+          if (cleaned.empty()) {
+            return;
+          }
+
+          std::string digits;
+          digits.reserve(cleaned.size());
+          for (char c : cleaned) {
+            if (c >= '0' && c <= '9') {
+              digits.push_back(c);
+            }
+          }
+
+          // Typical pet chip IDs are decimal. Prefer numeric payload when present.
+          const std::string chip = digits.size() >= 10 ? digits : cleaned;
+          if (chip.size() < 6) {
+            return;
+          }
+
+          id(pending_chip_id) = chip;
+          id(pending_chip_id_ms) = millis();
+          id(last_chip_id).publish_state(chip.c_str());
+          id(try_send_event).execute();
 
 api:
   services:

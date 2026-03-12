@@ -71,8 +71,8 @@ class CatFlapOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_remove_cat(self, user_input=None) -> FlowResult:
         hub = self._get_hub()
-        chip_ids = sorted(hub.cats.keys())
-        if not chip_ids:
+        options = self._cat_options(hub)
+        if not options:
             return self.async_abort(reason="no_cats_registered")
 
         errors = {}
@@ -87,7 +87,7 @@ class CatFlapOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CHIP_ID): SelectSelector(
-                        SelectSelectorConfig(options=chip_ids)
+                        SelectSelectorConfig(options=options)
                     ),
                 }
             ),
@@ -96,8 +96,8 @@ class CatFlapOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_set_presence(self, user_input=None) -> FlowResult:
         hub = self._get_hub()
-        chip_ids = sorted(hub.cats.keys())
-        if not chip_ids:
+        options = self._cat_options(hub)
+        if not options:
             return self.async_abort(reason="no_cats_registered")
 
         errors = {}
@@ -115,7 +115,7 @@ class CatFlapOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CHIP_ID): SelectSelector(
-                        SelectSelectorConfig(options=chip_ids)
+                        SelectSelectorConfig(options=options)
                     ),
                     vol.Required(CONF_INSIDE): bool,
                 }
@@ -128,3 +128,16 @@ class CatFlapOptionsFlow(config_entries.OptionsFlow):
         if not bucket:
             raise HomeAssistantError("Cat flap entry is not loaded")
         return bucket[DATA_HUB]
+
+    @staticmethod
+    def _cat_options(hub: CatFlapHub) -> list[dict[str, str]]:
+        options: list[dict[str, str]] = []
+        for chip_id in sorted(hub.cats.keys()):
+            cat = hub.cats[chip_id]
+            options.append(
+                {
+                    "value": chip_id,
+                    "label": f"{cat.name} ({chip_id})",
+                }
+            )
+        return options

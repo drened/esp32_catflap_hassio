@@ -10,6 +10,7 @@ The system identifies which cat enters or leaves through the flap and logs the d
 - Persistent cat registry (`chip_id`, `name`, `inside`)
 - Event ingestion service for ESPHome/device events
 - Inside/outside tracking per registered cat
+- Per-cat sensor: `Outside Today` (hours)
 - Event sensors (`last direction`, `last chip`, `last event time`, `last cat`)
 - Fully local operation (no cloud required)
 
@@ -89,6 +90,14 @@ For real RFID wiring, set the chip id in ESPHome when a reader event arrives:
 
 - Call ESPHome service `esphome.catflap_set_chip_id` with `chip_id`.
 - Direction is derived from ToF sequence (`front -> back` = `in`, `back -> front` = `out`).
+
+## Outside Duration Per Day
+
+The integration provides this directly:
+
+- Dynamic sensor per cat: `<Flap Name> <Cat Name> Outside Today`
+- Unit: hours (`h`)
+- Auto reset at local midnight
 
 ## Project Goals
 
