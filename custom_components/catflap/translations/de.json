@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ESP32 Cat Flap",
+        "data": {
+          "name": "Name"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Katzenverwaltung",
+        "menu_options": {
+          "add_cat": "Katze hinzufügen",
+          "remove_cat": "Katze entfernen",
+          "set_presence": "Anwesenheit setzen"
+        }
+      },
+      "add_cat": {
+        "title": "Katze hinzufügen",
+        "data": {
+          "chip_id": "Chip-ID",
+          "name": "Katzenname",
+          "inside": "Aktuell drinnen"
+        }
+      },
+      "remove_cat": {
+        "title": "Katze entfernen",
+        "data": {
+          "chip_id": "Chip-ID"
+        }
+      },
+      "set_presence": {
+        "title": "Anwesenheit setzen",
+        "data": {
+          "chip_id": "Chip-ID",
+          "inside": "Drinnen"
+        }
+      }
+    },
+    "abort": {
+      "no_cats_registered": "Noch keine Katzen registriert."
+    },
+    "error": {
+      "unknown_chip_id": "Unbekannte Chip-ID."
+    }
+  }
+}
