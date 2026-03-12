@@ -1,19 +1,15 @@
 from __future__ import annotations
 
-from datetime import timedelta
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HUB, DOMAIN
 from .hub import CatFlapHub
-
-ACTIVE_WINDOW = timedelta(seconds=30)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -73,6 +69,8 @@ class CatFlapBaseBinarySensor(BinarySensorEntity):
 
 
 class CatFlapActivityBinarySensor(CatFlapBaseBinarySensor):
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     def __init__(self, entry: ConfigEntry, hub: CatFlapHub) -> None:
         super().__init__(entry, hub)
         self._attr_name = f"{entry.title} Activity"
@@ -86,7 +84,13 @@ class CatFlapActivityBinarySensor(CatFlapBaseBinarySensor):
         last_at = dt_util.parse_datetime(self._hub.last_event.at)
         if last_at is None:
             return False
-        return dt_util.utcnow() - last_at <= ACTIVE_WINDOW
+        return (
+            dt_util.utcnow() - last_at
+        ).total_seconds() <= self._hub.activity_window_seconds
+
+    @property
+    def extra_state_attributes(self) -> dict[str, int]:
+        return {"window_seconds": self._hub.activity_window_seconds}
 
 
 class CatInsideBinarySensor(CatFlapBaseBinarySensor):

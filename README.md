@@ -9,9 +9,11 @@ The system identifies which cat enters or leaves through the flap and logs the d
 - Home Assistant custom integration (`catflap`)
 - Persistent cat registry (`chip_id`, `name`, `inside`)
 - Event ingestion service for ESPHome/device events
+- Duplicate event suppression (configurable)
 - Inside/outside tracking per registered cat
 - Per-cat sensor: `Outside Today` (hours)
 - Event sensors (`last direction`, `last chip`, `last event time`, `last cat`)
+- Diagnostic sensors (`total events`, `duplicates`, `unknown chip/direction`)
 - Fully local operation (no cloud required)
 
 ## Hardware
@@ -72,6 +74,8 @@ You can also manage cats from the integration UI:
 2. Open `ESP32 Cat Flap`.
 3. Click `Configure`.
 4. Use `Add cat`, `Remove cat`, or `Set presence`.
+5. Use `Edit cat` to rename/change chip ID.
+6. Use `Settings` to tune duplicate-filter and activity windows.
 
 ## ESPHome Test
 
@@ -109,3 +113,15 @@ The integration provides this directly:
 ## Status
 
 MVP integration available, hardware logic still in progress.
+
+## Tests
+
+Run hub logic tests locally:
+
+```powershell
+python -m unittest -v tests/test_hub.py
+```
+
+## Releases
+
+- Version history: `CHANGELOG.md`

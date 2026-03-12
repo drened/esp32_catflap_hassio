@@ -12,7 +12,9 @@ from .const import (
     CONF_DIRECTION,
     CONF_ENTRY_ID,
     CONF_INSIDE,
+    CONF_NEW_CHIP_ID,
     CONF_NAME,
+    CONF_OLD_CHIP_ID,
     CONF_SOURCE,
     DATA_HUB,
     DOMAIN,
@@ -21,6 +23,7 @@ from .const import (
     SERVICE_REGISTER_CAT,
     SERVICE_REMOVE_CAT,
     SERVICE_SET_PRESENCE,
+    SERVICE_UPDATE_CAT,
     VALID_DIRECTIONS,
 )
 from .hub import CatFlapHub
@@ -58,6 +61,16 @@ SET_PRESENCE_SCHEMA = vol.Schema(
     }
 )
 
+UPDATE_CAT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ENTRY_ID): str,
+        vol.Required(CONF_OLD_CHIP_ID): cv.string,
+        vol.Required(CONF_NEW_CHIP_ID): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_INSIDE): cv.boolean,
+    }
+)
+
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.data.setdefault(DOMAIN, {})
@@ -73,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await hub.async_load()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_HUB: hub}
+    entry.async_on_unload(entry.add_update_listener(_async_update_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -116,6 +130,17 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         if not updated:
             raise HomeAssistantError("Unknown chip_id")
 
+    async def _update_cat(service_call) -> None:
+        hub = _resolve_hub(hass, service_call.data.get(CONF_ENTRY_ID))
+        updated = await hub.async_update_cat(
+            old_chip_id=service_call.data[CONF_OLD_CHIP_ID],
+            new_chip_id=service_call.data[CONF_NEW_CHIP_ID],
+            name=service_call.data[CONF_NAME],
+            inside=service_call.data[CONF_INSIDE],
+        )
+        if not updated:
+            raise HomeAssistantError("Cat update failed")
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_PROCESS_EVENT,
@@ -140,6 +165,12 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         _set_presence,
         schema=SET_PRESENCE_SCHEMA,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_CAT,
+        _update_cat,
+        schema=UPDATE_CAT_SCHEMA,
+    )
 
 
 def _resolve_hub(hass: HomeAssistant, entry_id: str | None) -> CatFlapHub:
@@ -158,3 +189,12 @@ def _resolve_hub(hass: HomeAssistant, entry_id: str | None) -> CatFlapHub:
         return entries[only_entry_id][DATA_HUB]
 
     raise HomeAssistantError("Multiple entries configured. Provide entry_id.")
+
+
+async def _async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    bucket = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not bucket:
+        return
+    hub: CatFlapHub = bucket[DATA_HUB]
+    hub.refresh_options()
+    hub._async_publish()  # trigger state refresh for entities using option-dependent values

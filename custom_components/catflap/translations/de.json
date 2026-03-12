@@ -15,8 +15,10 @@
         "title": "Katzenverwaltung",
         "menu_options": {
           "add_cat": "Katze hinzufügen",
+          "edit_cat": "Katze bearbeiten",
           "remove_cat": "Katze entfernen",
-          "set_presence": "Anwesenheit setzen"
+          "set_presence": "Anwesenheit setzen",
+          "settings": "Einstellungen"
         }
       },
       "add_cat": {
@@ -33,11 +35,33 @@
           "chip_id": "Chip-ID"
         }
       },
+      "edit_cat": {
+        "title": "Katze bearbeiten",
+        "data": {
+          "old_chip_id": "Katze"
+        }
+      },
+      "edit_cat_details": {
+        "title": "Katze bearbeiten",
+        "data": {
+          "old_chip_id": "Aktuelle Chip-ID",
+          "new_chip_id": "Neue Chip-ID",
+          "name": "Katzenname",
+          "inside": "Aktuell drinnen"
+        }
+      },
       "set_presence": {
         "title": "Anwesenheit setzen",
         "data": {
           "chip_id": "Chip-ID",
           "inside": "Drinnen"
+        }
+      },
+      "settings": {
+        "title": "Verhalten",
+        "data": {
+          "event_dedupe_seconds": "Doppel-Event-Fenster (Sekunden)",
+          "activity_window_seconds": "Aktivitätsfenster (Sekunden)"
         }
       }
     },
@@ -45,7 +69,8 @@
       "no_cats_registered": "Noch keine Katzen registriert."
     },
     "error": {
-      "unknown_chip_id": "Unbekannte Chip-ID."
+      "unknown_chip_id": "Unbekannte Chip-ID.",
+      "cat_update_failed": "Katze konnte nicht aktualisiert werden."
     }
   }
 }

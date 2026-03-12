@@ -61,7 +61,8 @@ uart:
 
           // Typical pet chip IDs are decimal. Prefer numeric payload when present.
           const std::string chip = digits.size() >= 10 ? digits : cleaned;
-          if (chip.size() < 6) {
+          // Reject clearly invalid payload lengths early to reduce false positives.
+          if (chip.size() < 10 || chip.size() > 20) {
             return;
           }
 

@@ -78,3 +78,28 @@ set_presence:
       required: true
       selector:
         boolean:
+
+update_cat:
+  name: Update cat
+  description: Update chip ID, name, or inside state for a known cat.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    old_chip_id:
+      required: true
+      selector:
+        text:
+    new_chip_id:
+      required: true
+      selector:
+        text:
+    name:
+      required: true
+      selector:
+        text:
+    inside:
+      required: true
+      selector:
+        boolean:

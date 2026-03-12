@@ -15,8 +15,10 @@
         "title": "Cat management",
         "menu_options": {
           "add_cat": "Add cat",
+          "edit_cat": "Edit cat",
           "remove_cat": "Remove cat",
-          "set_presence": "Set presence"
+          "set_presence": "Set presence",
+          "settings": "Settings"
         }
       },
       "add_cat": {
@@ -33,11 +35,33 @@
           "chip_id": "Chip ID"
         }
       },
+      "edit_cat": {
+        "title": "Edit cat",
+        "data": {
+          "old_chip_id": "Cat"
+        }
+      },
+      "edit_cat_details": {
+        "title": "Edit cat details",
+        "data": {
+          "old_chip_id": "Current chip ID",
+          "new_chip_id": "New chip ID",
+          "name": "Cat name",
+          "inside": "Currently inside"
+        }
+      },
       "set_presence": {
         "title": "Set presence",
         "data": {
           "chip_id": "Chip ID",
           "inside": "Inside"
+        }
+      },
+      "settings": {
+        "title": "Behavior settings",
+        "data": {
+          "event_dedupe_seconds": "Duplicate event window (seconds)",
+          "activity_window_seconds": "Activity sensor window (seconds)"
         }
       }
     },
@@ -45,7 +69,8 @@
       "no_cats_registered": "No cats registered yet."
     },
     "error": {
-      "unknown_chip_id": "Unknown chip ID."
+      "unknown_chip_id": "Unknown chip ID.",
+      "cat_update_failed": "Cat update failed."
     }
   }
 }

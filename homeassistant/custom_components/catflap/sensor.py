@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -28,6 +29,10 @@ async def async_setup_entry(
             CatFlapKnownCatSensor(entry, hub),
             CatFlapLastSeenSensor(entry, hub),
             CatFlapCatCountSensor(entry, hub),
+            CatFlapTotalEventsSensor(entry, hub),
+            CatFlapDuplicateEventsSensor(entry, hub),
+            CatFlapUnknownChipEventsSensor(entry, hub),
+            CatFlapUnknownDirectionEventsSensor(entry, hub),
         ]
     )
 
@@ -132,6 +137,8 @@ class CatFlapLastSeenSensor(CatFlapBaseSensor):
 
 
 class CatFlapCatCountSensor(CatFlapBaseSensor):
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     def __init__(self, entry: ConfigEntry, hub: CatFlapHub) -> None:
         super().__init__(entry, hub)
         self._attr_name = f"{entry.title} Registered Cats"
@@ -143,10 +150,71 @@ class CatFlapCatCountSensor(CatFlapBaseSensor):
         return len(self._hub.cats)
 
 
+class CatFlapTotalEventsSensor(CatFlapBaseSensor):
+    _attr_icon = "mdi:counter"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, entry: ConfigEntry, hub: CatFlapHub) -> None:
+        super().__init__(entry, hub)
+        self._attr_name = f"{entry.title} Total Events"
+        self._attr_unique_id = f"{entry.entry_id}_total_events"
+
+    @property
+    def native_value(self) -> int:
+        return self._hub.total_events
+
+
+class CatFlapDuplicateEventsSensor(CatFlapBaseSensor):
+    _attr_icon = "mdi:content-duplicate"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, entry: ConfigEntry, hub: CatFlapHub) -> None:
+        super().__init__(entry, hub)
+        self._attr_name = f"{entry.title} Dropped Duplicates"
+        self._attr_unique_id = f"{entry.entry_id}_duplicate_events"
+
+    @property
+    def native_value(self) -> int:
+        return self._hub.duplicate_events
+
+
+class CatFlapUnknownChipEventsSensor(CatFlapBaseSensor):
+    _attr_icon = "mdi:help-circle-outline"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, entry: ConfigEntry, hub: CatFlapHub) -> None:
+        super().__init__(entry, hub)
+        self._attr_name = f"{entry.title} Unknown Chip Events"
+        self._attr_unique_id = f"{entry.entry_id}_unknown_chip_events"
+
+    @property
+    def native_value(self) -> int:
+        return self._hub.unknown_chip_events
+
+
+class CatFlapUnknownDirectionEventsSensor(CatFlapBaseSensor):
+    _attr_icon = "mdi:swap-horizontal-bold"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, entry: ConfigEntry, hub: CatFlapHub) -> None:
+        super().__init__(entry, hub)
+        self._attr_name = f"{entry.title} Unknown Direction Events"
+        self._attr_unique_id = f"{entry.entry_id}_unknown_direction_events"
+
+    @property
+    def native_value(self) -> int:
+        return self._hub.unknown_direction_events
+
+
 class CatOutsideTodaySensor(CatFlapBaseSensor):
     _attr_native_unit_of_measurement = "h"
     _attr_suggested_display_precision = 2
     _attr_icon = "mdi:timer-outline"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, entry: ConfigEntry, hub: CatFlapHub, chip_id: str) -> None:
         super().__init__(entry, hub)
