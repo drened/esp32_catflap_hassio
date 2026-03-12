@@ -76,6 +76,7 @@ You can also manage cats from the integration UI:
 
 `esphome/catflap.yaml` contains two template buttons:
 
+- `Simulate RFID Read`
 - `Simulate Cat IN`
 - `Simulate Cat OUT`
 
@@ -83,6 +84,11 @@ Before flashing:
 
 1. Replace `catflap_entry_id` in `esphome/catflap.yaml` with your Home Assistant integration entry id.
 2. Adjust `test_chip_id` to a real chip for end-to-end tests.
+
+For real RFID wiring, set the chip id in ESPHome when a reader event arrives:
+
+- Call ESPHome service `esphome.catflap_set_chip_id` with `chip_id`.
+- Direction is derived from ToF sequence (`front -> back` = `in`, `back -> front` = `out`).
 
 ## Project Goals
 

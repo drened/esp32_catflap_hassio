@@ -3,8 +3,12 @@ esphome:
   friendly_name: Cat Flap
 
 substitutions:
-  catflap_entry_id: "REPLACE_WITH_HA_ENTRY_ID"
+  catflap_entry_id: ""
   test_chip_id: "900000000001"
+  front_threshold_mm: "180"
+  back_threshold_mm: "180"
+  sequence_timeout_ms: "2200"
+  event_pair_timeout_ms: "12000"
 
 esp32:
   board: esp32dev
@@ -16,28 +20,247 @@ wifi:
 logger:
 
 api:
+  services:
+    - service: set_chip_id
+      variables:
+        chip_id: string
+      then:
+        - lambda: |-
+            id(pending_chip_id) = chip_id;
+            id(pending_chip_id_ms) = millis();
+            id(last_chip_id).publish_state(chip_id.c_str());
+        - script.execute: try_send_event
+
+    - service: clear_chip_id
+      then:
+        - lambda: |-
+            id(pending_chip_id).clear();
+            id(last_chip_id).publish_state("");
 
 ota:
 
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+globals:
+  - id: first_sensor_trigger
+    type: int
+    restore_value: no
+    initial_value: "0" # 0=none, 1=front, 2=back
+  - id: sequence_started_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+  - id: direction_ready
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: direction_ready_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+  - id: pending_direction
+    type: std::string
+    restore_value: no
+    initial_value: "\"unknown\""
+  - id: pending_chip_id
+    type: std::string
+    restore_value: no
+    initial_value: "\"\""
+  - id: pending_chip_id_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+  - id: front_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: back_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+text_sensor:
+  - platform: template
+    id: last_chip_id
+    name: "Last RFID Chip ID"
+    update_interval: never
+
+  - platform: template
+    id: last_direction
+    name: "Last Direction"
+    update_interval: never
+
+binary_sensor:
+  - platform: template
+    name: "Tunnel Front Active"
+    lambda: |-
+      return id(front_active);
+  - platform: template
+    name: "Tunnel Back Active"
+    lambda: |-
+      return id(back_active);
+
+sensor:
+  # Two VL53L0X sensors need unique I2C addresses.
+  # Keep one at 0x29 and set the second to 0x30 via XSHUT boot sequencing.
+  - platform: vl53l0x
+    id: front_tof
+    name: "Front Distance"
+    address: 0x29
+    update_interval: 100ms
+    long_range: true
+    on_value:
+      then:
+        - lambda: |-
+            const float mm = x * 1000.0f;
+            const bool active = mm > 1.0f && mm < ${front_threshold_mm};
+
+            if (active == id(front_active)) {
+              return;
+            }
+            id(front_active) = active;
+
+            if (!active) {
+              return;
+            }
+
+            const uint32_t now = millis();
+            if (now - id(sequence_started_ms) > ${sequence_timeout_ms}) {
+              id(first_sensor_trigger) = 0;
+            }
+
+            if (id(first_sensor_trigger) == 0) {
+              id(first_sensor_trigger) = 1;
+              id(sequence_started_ms) = now;
+            } else if (id(first_sensor_trigger) == 2) {
+              id(pending_direction) = "out";
+              id(direction_ready) = true;
+              id(direction_ready_ms) = now;
+              id(first_sensor_trigger) = 0;
+              id(last_direction).publish_state("out");
+            }
+        - script.execute: try_send_event
+
+  - platform: vl53l0x
+    id: back_tof
+    name: "Back Distance"
+    address: 0x30
+    update_interval: 100ms
+    long_range: true
+    on_value:
+      then:
+        - lambda: |-
+            const float mm = x * 1000.0f;
+            const bool active = mm > 1.0f && mm < ${back_threshold_mm};
+
+            if (active == id(back_active)) {
+              return;
+            }
+            id(back_active) = active;
+
+            if (!active) {
+              return;
+            }
+
+            const uint32_t now = millis();
+            if (now - id(sequence_started_ms) > ${sequence_timeout_ms}) {
+              id(first_sensor_trigger) = 0;
+            }
+
+            if (id(first_sensor_trigger) == 0) {
+              id(first_sensor_trigger) = 2;
+              id(sequence_started_ms) = now;
+            } else if (id(first_sensor_trigger) == 1) {
+              id(pending_direction) = "in";
+              id(direction_ready) = true;
+              id(direction_ready_ms) = now;
+              id(first_sensor_trigger) = 0;
+              id(last_direction).publish_state("in");
+            }
+        - script.execute: try_send_event
+
+  - platform: wifi_signal
+    name: "WiFi RSSI"
+    update_interval: 60s
+
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
+
+script:
+  - id: try_send_event
+    mode: queued
+    then:
+      - lambda: |-
+          if (id(pending_chip_id).empty() || !id(direction_ready)) {
+            return;
+          }
+
+          const uint32_t now = millis();
+          if (now - id(pending_chip_id_ms) > ${event_pair_timeout_ms}) {
+            return;
+          }
+          if (now - id(direction_ready_ms) > ${event_pair_timeout_ms}) {
+            return;
+          }
+
+      - homeassistant.service:
+          service: catflap.process_event
+          data:
+            entry_id: ${catflap_entry_id}
+            chip_id: !lambda 'return id(pending_chip_id);'
+            direction: !lambda 'return id(pending_direction);'
+            source: esphome
+
+      - lambda: |-
+          id(direction_ready) = false;
+          id(pending_chip_id).clear();
+          id(first_sensor_trigger) = 0;
+          id(last_chip_id).publish_state("");
+
 button:
+  - platform: template
+    name: "Simulate RFID Read"
+    on_press:
+      - lambda: |-
+          id(pending_chip_id) = "${test_chip_id}";
+          id(pending_chip_id_ms) = millis();
+          id(last_chip_id).publish_state("${test_chip_id}");
+      - script.execute: try_send_event
+
   - platform: template
     name: "Simulate Cat IN"
     on_press:
+      - lambda: |-
+          id(pending_direction) = "in";
+          id(direction_ready) = true;
+          id(direction_ready_ms) = millis();
+          id(last_direction).publish_state("in");
+      - script.execute: try_send_event
       - homeassistant.service:
           service: catflap.process_event
           data:
             entry_id: ${catflap_entry_id}
             chip_id: ${test_chip_id}
             direction: in
-            source: esphome_test
+            source: esphome_test_direct
 
   - platform: template
     name: "Simulate Cat OUT"
     on_press:
+      - lambda: |-
+          id(pending_direction) = "out";
+          id(direction_ready) = true;
+          id(direction_ready_ms) = millis();
+          id(last_direction).publish_state("out");
+      - script.execute: try_send_event
       - homeassistant.service:
           service: catflap.process_event
           data:
             entry_id: ${catflap_entry_id}
             chip_id: ${test_chip_id}
             direction: out
-            source: esphome_test
+            source: esphome_test_direct
