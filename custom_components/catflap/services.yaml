@@ -1,0 +1,80 @@
+process_event:
+  name: Process cat flap event
+  description: Processes a chip and direction event from ESPHome or another source.
+  fields:
+    entry_id:
+      required: false
+      example: "01HVV...ABC"
+      selector:
+        text:
+    chip_id:
+      required: true
+      example: "900000000001"
+      selector:
+        text:
+    direction:
+      required: true
+      example: "in"
+      selector:
+        select:
+          options:
+            - "in"
+            - "out"
+            - "unknown"
+    source:
+      required: false
+      example: "esphome"
+      selector:
+        text:
+
+register_cat:
+  name: Register cat
+  description: Registers or updates a cat profile.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    chip_id:
+      required: true
+      selector:
+        text:
+    name:
+      required: true
+      selector:
+        text:
+    inside:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+remove_cat:
+  name: Remove cat
+  description: Removes a cat profile by chip ID.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    chip_id:
+      required: true
+      selector:
+        text:
+
+set_presence:
+  name: Set cat presence
+  description: Manually sets inside/outside state for a known cat.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    chip_id:
+      required: true
+      selector:
+        text:
+    inside:
+      required: true
+      selector:
+        boolean:

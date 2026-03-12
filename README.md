@@ -40,7 +40,7 @@ Processes the events and manages:
 
 ## Setup
 
-1. Copy `homeassistant/custom_components/catflap` to your Home Assistant `custom_components` folder.
+1. Copy `custom_components/catflap` to your Home Assistant `custom_components` folder.
 2. Restart Home Assistant.
 3. Add integration: `Settings -> Devices & Services -> Add Integration -> ESP32 Cat Flap`.
 4. Set a flap name.
