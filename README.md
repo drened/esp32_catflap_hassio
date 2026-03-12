@@ -1,6 +1,6 @@
-# ESP32 Cat Flap for Home Assistant
+# ESP32 Cat Flap Addon for Home Assistant
 
-A DIY smart cat flap system built with an ESP32 that detects RFID pet microchips and integrates with Home Assistant via ESPHome.
+A DIY addon for cat flap systems built with an ESP32 that detects RFID pet microchips and integrates with Home Assistant via ESPHome.
 
 The system identifies which cat enters or leaves through the flap and logs the direction (entry/exit). Each cat can be tracked individually inside Home Assistant.
 
