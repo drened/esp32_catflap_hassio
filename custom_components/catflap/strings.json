@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ESP32 Cat Flap",
+        "data": {
+          "name": "Name"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Cat management"
+      },
+      "add_cat": {
+        "title": "Add cat",
+        "data": {
+          "chip_id": "Chip ID",
+          "name": "Cat name",
+          "inside": "Currently inside"
+        }
+      },
+      "remove_cat": {
+        "title": "Remove cat",
+        "data": {
+          "chip_id": "Chip ID"
+        }
+      },
+      "set_presence": {
+        "title": "Set presence",
+        "data": {
+          "chip_id": "Chip ID",
+          "inside": "Inside"
+        }
+      }
+    },
+    "menu_options": {
+      "add_cat": "Add cat",
+      "remove_cat": "Remove cat",
+      "set_presence": "Set presence"
+    },
+    "abort": {
+      "no_cats_registered": "No cats registered yet."
+    },
+    "error": {
+      "unknown_chip_id": "Unknown chip ID."
+    }
+  }
+}

@@ -65,6 +65,13 @@ Processes the events and manages:
   - `source` (optional)
   - `entry_id` (optional if only one integration exists)
 
+You can also manage cats from the integration UI:
+
+1. Open `Settings -> Devices & Services`.
+2. Open `ESP32 Cat Flap`.
+3. Click `Configure`.
+4. Use `Add cat`, `Remove cat`, or `Set presence`.
+
 ## ESPHome Test
 
 `esphome/catflap.yaml` contains two template buttons:
