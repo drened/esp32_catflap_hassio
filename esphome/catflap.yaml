@@ -2,6 +2,10 @@ esphome:
   name: catflap
   friendly_name: Cat Flap
 
+substitutions:
+  catflap_entry_id: "REPLACE_WITH_HA_ENTRY_ID"
+  test_chip_id: "900000000001"
+
 esp32:
   board: esp32dev
 
@@ -14,3 +18,26 @@ logger:
 api:
 
 ota:
+
+button:
+  - platform: template
+    name: "Simulate Cat IN"
+    on_press:
+      - homeassistant.service:
+          service: catflap.process_event
+          data:
+            entry_id: ${catflap_entry_id}
+            chip_id: ${test_chip_id}
+            direction: in
+            source: esphome_test
+
+  - platform: template
+    name: "Simulate Cat OUT"
+    on_press:
+      - homeassistant.service:
+          service: catflap.process_event
+          data:
+            entry_id: ${catflap_entry_id}
+            chip_id: ${test_chip_id}
+            direction: out
+            source: esphome_test
